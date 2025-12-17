@@ -1516,7 +1516,7 @@ void handle_nr_srs_measurements(const module_id_t module_id,
   }
 
   if (srs_ind->timing_advance_offset == 0xFFFF) {
-    LOG_W(NR_MAC, "Invalid timing advance offset for RNTI %04x\n", srs_ind->rnti);
+    //LOG_W(NR_MAC, "Invalid timing advance offset for RNTI %04x\n", srs_ind->rnti);
     return;
   }
   NR_SCHED_LOCK(&nrmac->sched_lock);
