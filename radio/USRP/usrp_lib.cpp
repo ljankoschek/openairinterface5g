@@ -1283,6 +1283,8 @@ extern "C" {
       std::cerr << "-- Using calibration table: calib_table_b210_38" << std::endl; // Bell Labs info
     }
 
+    printf("USRP B200 series sample_rate:%u\n", (int)openair0_cfg[0].sample_rate);
+
     switch ((int)openair0_cfg[0].sample_rate) {
       case 46080000:
         s->usrp->set_master_clock_rate(46.08e6);
