@@ -1297,7 +1297,7 @@ extern "C" {
       case 30720000:
         s->usrp->set_master_clock_rate(30.72e6);
         //openair0_cfg[0].samples_per_packet    = 1024;
-        openair0_cfg[0].tx_sample_advance     = 115;
+        openair0_cfg[0].tx_sample_advance     = 164;
         openair0_cfg[0].tx_bw                 = 20e6;
         openair0_cfg[0].rx_bw                 = 20e6;
         break;
