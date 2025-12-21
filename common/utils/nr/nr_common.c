@@ -41,6 +41,7 @@
 
 #define C_SRS_NUMBER (64)
 #define B_SRS_NUMBER (4)
+#define CUSTOM_BAND_24G_ISM 141
 
 /* TS 38.211 Table 6.4.1.4.3-1: SRS bandwidth configuration */
 static const unsigned short srs_bandwidth_config[C_SRS_NUMBER][B_SRS_NUMBER][2] = {
@@ -303,7 +304,14 @@ const nr_bandentry_t nr_bandtable[] = {{1, 1920000, 1980000, 2110000, 2170000, 2
                                        {260, 37000020, 40000000, 37000020, 40000000, 1, 2229166, 60},
                                        {260, 37000080, 40000000, 37000080, 40000000, 2, 2229167, 120},
                                        {261, 27500040, 28350000, 27500040, 28350000, 1, 2070833, 60},
-                                       {261, 27500040, 28350000, 27500040, 28350000, 2, 2070833, 120}};
+                                       {261, 27500040, 28350000, 27500040, 28350000, 2, 2070833, 120},
+                                       // Custom band: 2400-2483.5 MHz (TDD-like: UL=DL), for 15kHz raster
+                                       {CUSTOM_BAND_24G_ISM, 2400000, 2483500, 2400000, 2483500, 3, 460000, 15},
+                                       // Custom band: same range, for 30kHz raster (mu=1)
+                                       {CUSTOM_BAND_24G_ISM, 2400000, 2483500, 2400000, 2483500, 6, 460000, 30},
+                                       // {41, 2496000, 2690000, 2496000, 2690000, 3, 499200, 15},
+                                       // {41, 2496000, 2690000, 2496000, 2690000, 6, 499200, 30},
+                                      };
 
 // synchronization raster per band tables (Rel.17)
 // (38.101-1 Table 5.4.3.3-1 and 38.101-2 Table 5.4.3.3-1)
@@ -381,6 +389,8 @@ const sync_raster_t sync_raster[] = {
   {260, 4, 22996, 2, 23164},
   {261, 3, 22446, 1, 22492},
   {261, 4, 22446, 2, 22490},
+  {CUSTOM_BAND_24G_ISM, 0, 6246, 3, 6717},
+  {CUSTOM_BAND_24G_ISM, 1, 6252, 3, 6714},
 };
 // clang-format on
 

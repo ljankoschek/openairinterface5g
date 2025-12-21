@@ -90,6 +90,8 @@ static const int nr_ssb_table[][3] = {
     {101, 30, nr_ssb_type_C},
     {102, 30, nr_ssb_type_C},
     {104, 30, nr_ssb_type_C},
+    {141, 15, nr_ssb_type_A},
+    {141, 30, nr_ssb_type_C},
     {254, 15, nr_ssb_type_A},
     {254, 30, nr_ssb_type_C},
     {255, 15, nr_ssb_type_A},
