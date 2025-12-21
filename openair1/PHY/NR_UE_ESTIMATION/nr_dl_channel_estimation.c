@@ -33,6 +33,7 @@
 #include "filt16a_32.h"
 #include "T.h"
 #include <openair1/PHY/TOOLS/phy_scope_interface.h>
+#include <math.h>
 #include "nfapi/open-nFAPI/nfapi/public_inc/nfapi_nr_interface.h"
 #include "instrumentation.h"
 #include "executables/nr-softmodem-common.h"
@@ -59,6 +60,7 @@ void peak_estimator(c16_t *buffer, int32_t buf_len, int32_t *peak_idx, int32_t *
       max_idx = k;
     }
   }
+
 
   // Check for detection threshold
   LOG_D(PHY, "PRS ToA estimator: max_val %d, mean_val %d, max_idx %d\n", max_val, mean_val, max_idx);
@@ -458,6 +460,77 @@ int nr_prs_channel_estimation(uint8_t gNB_id,
     // peak estimator
     mean_val = squaredMod(((c16_t *)ch_tmp)[(prs_cfg->NumRB * 12) >> 1]);
     peak_estimator(&chT_interpol[rxAnt][0], NR_PRS_IDFT_OVERSAMP_FACTOR * frame_params->ofdm_symbol_size, &prs_toa, &ch_pwr, mean_val);
+    LOG_I(PHY,
+      "[PRS-RAW] gNB %d rsc %d Rx %d sfn %d slot %d: prs_toa_raw=%d / %d (oversamp=%d) ch_pwr=%d mean=%d\n",
+      gNB_id, rsc_id, rxAnt, proc->frame_rx, proc->nr_slot_rx,
+      prs_toa,
+      NR_PRS_IDFT_OVERSAMP_FACTOR * frame_params->ofdm_symbol_size,
+      NR_PRS_IDFT_OVERSAMP_FACTOR,
+      ch_pwr, mean_val);
+
+    float frac = 0.0f;
+    int len = NR_PRS_IDFT_OVERSAMP_FACTOR * frame_params->ofdm_symbol_size;
+
+    if (prs_toa > 0 && prs_toa < len - 1 && ch_pwr > 0) {
+      float y1 = (float)squaredMod(chT_interpol[rxAnt][prs_toa - 1]);
+      float y2 = (float)squaredMod(chT_interpol[rxAnt][prs_toa]);
+      float y3 = (float)squaredMod(chT_interpol[rxAnt][prs_toa + 1]);
+      float denom = (y1 - 2.0f*y2 + y3);
+      if (fabsf(denom) > 1e-6f)
+        frac = 0.5f * (y1 - y3) / denom;   // in [-0.5, +0.5] typically
+    }
+
+    float peak_os_frac = (float)prs_toa + frac;
+    float peak_samp_frac = peak_os_frac / (float)NR_PRS_IDFT_OVERSAMP_FACTOR;
+
+    LOG_I(PHY,
+          "[PRS-RAW] gNB %d rsc %d Rx %d sfn %d slot %d: peak_os=%.3f peak_samp=%.3f (len_os=%d)\n",
+          gNB_id, rsc_id, rxAnt, proc->frame_rx, proc->nr_slot_rx,
+          peak_os_frac, peak_samp_frac, len);
+
+    // --- Option 1: unwrap correlation index + make it absolute over time ---
+
+    const int len_os = NR_PRS_IDFT_OVERSAMP_FACTOR * frame_params->ofdm_symbol_size; // correlation length in oversampled samples
+
+    // 1) raw peak index in correlation domain (0..len_os-1)
+    int prs_toa_raw_os = prs_toa;
+
+    // 2) unwrap to signed domain around 0 (so delays near end become negative)
+    int prs_toa_signed_os = prs_toa_raw_os;
+    if (prs_toa_signed_os > len_os/2)
+      prs_toa_signed_os -= len_os;
+
+    // 3) include fractional refinement (optional but recommended since you already compute frac)
+    float prs_toa_raw_os_f = (float)prs_toa_raw_os + frac;
+    float prs_toa_signed_os_f = prs_toa_raw_os_f;
+    if (prs_toa_raw_os_f > (float)len_os/2.0f)
+      prs_toa_signed_os_f -= (float)len_os;
+
+    // 4) build a monotonic "absolute" index by adding a slot counter
+    int64_t abs_slot = (int64_t)proc->frame_rx * (int64_t)frame_params->slots_per_frame
+                    + (int64_t)proc->nr_slot_rx;
+
+    // absolute peak position in oversampled correlation samples
+    double abs_toa_os = (double)abs_slot * (double)len_os + (double)prs_toa_signed_os_f;
+
+    // also in non-oversampled samples (divide by oversamp)
+    double abs_toa_samp = abs_toa_os / (double)NR_PRS_IDFT_OVERSAMP_FACTOR;
+
+    LOG_I(PHY,
+          "[PRS-ABS] gNB %d rsc %d Rx %d sfn %d slot %d abs_slot=%lld "
+          "raw_os=%d signed_os=%d abs_toa_os=%.3f abs_toa_samp=%.3f "
+          "(len_os=%d, Nfft=%d, oversamp=%d)\n",
+          gNB_id, rsc_id, rxAnt, proc->frame_rx, proc->nr_slot_rx,
+          (long long)abs_slot,
+          prs_toa_raw_os, prs_toa_signed_os,
+          abs_toa_os, abs_toa_samp,
+          len_os, frame_params->ofdm_symbol_size, NR_PRS_IDFT_OVERSAMP_FACTOR);
+
+    
+    
+
+
+
 
     // adjusting the rx_gains for channel peak power
     ch_pwr_dbm = 10 * log10(ch_pwr) + 30 - SQ15_SQUARED_NORM_FACTOR_DB

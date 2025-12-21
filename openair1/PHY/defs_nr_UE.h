@@ -239,7 +239,7 @@ typedef struct {
   int32_t freq_offset;
 } NR_UE_COMMON;
 
-#define NR_PRS_IDFT_OVERSAMP_FACTOR 1  // IDFT oversampling factor for NR PRS channel estimates in time domain, ALLOWED value 16x, and 1x is default(ie. IDFT size is frame_params->ofdm_symbol_size)
+#define NR_PRS_IDFT_OVERSAMP_FACTOR 16  // IDFT oversampling factor for NR PRS channel estimates in time domain, ALLOWED value 16x, and 1x is default(ie. IDFT size is frame_params->ofdm_symbol_size)
 typedef struct {
   prs_config_t prs_cfg;
   int32_t reserved;
