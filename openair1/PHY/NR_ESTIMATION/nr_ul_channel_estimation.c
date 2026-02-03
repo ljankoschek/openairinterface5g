@@ -89,6 +89,41 @@ __attribute__((always_inline)) inline c16_t c32x16cumulVectVectWithSteps(c16_t *
   return c16x32div(cumul, N);
 }
 
+
+// peak estimation
+static inline int32_t squaredMod_c16(c16_t x)
+{
+  return (int32_t)x.r * x.r + (int32_t)x.i * x.i;
+}
+
+static void peak_estimator_ul(c16_t *buffer,
+                              int32_t buf_len,
+                              int32_t *peak_idx,
+                              int32_t *peak_val,
+                              int32_t mean_val)
+{
+  int32_t max_val = 0, max_idx = 0;
+
+  for (int k = 0; k < buf_len; k++) {
+    int32_t v = squaredMod_c16(buffer[k]);
+    if (v > max_val) {
+      max_val = v;
+      max_idx = k;
+    }
+  }
+
+  if (mean_val != 0 && (max_val / mean_val > 10)) {
+    *peak_val = max_val;
+    *peak_idx = max_idx;
+  } else {
+    *peak_val = 0;
+    *peak_idx = 0;
+  }
+}
+
+
+
+
 static void nr_pusch_antenna_processing(void *arg)
 {
   puschAntennaProc_t *rdata = (puschAntennaProc_t *)arg;
@@ -974,6 +1009,32 @@ int nr_srs_channel_estimation(
       memcpy(&srs_estimated_channel_time_shifted[ant][p_index][gNB->frame_parms.ofdm_symbol_size >> 1],
              srs_estimated_channel_time[ant][p_index],
              (gNB->frame_parms.ofdm_symbol_size >> 1) * sizeof(c16_t));
+
+      // --- UL ToA from SRS CIR (time domain) ---
+      const int N = gNB->frame_parms.ofdm_symbol_size;
+
+      // Use the shifted CIR buffer (FFT-shifted, so "0 delay" is at N/2)
+      c16_t *cir = srs_estimated_channel_time_shifted[ant][p_index];
+
+      // Mean power for thresholding
+      uint64_t sum = 0;
+      for (int k = 0; k < N; k++)
+        sum += (uint32_t)squaredMod_c16(cir[k]);
+
+      int32_t mean_val = (int32_t)(sum / (uint32_t)N);
+
+      int32_t peak_idx = 0, peak_val = 0;
+      peak_estimator_ul(cir, N, &peak_idx, &peak_val, mean_val);
+
+      // Convert peak index to signed sample delay around 0
+      // (because cir is shifted by N/2)
+      int32_t toa_samp = peak_idx - (N >> 1);
+
+      // Log it
+      LOG_I(NR_PHY,
+            "[gNB %d][SRS][rnti 0x%04x][frame %d][slot %d][Rx %d][port %d] UL ToA ==> %d / %d samples (peak=%d mean=%d)\n",
+            0, srs_pdu->rnti, frame, slot, ant, p_index, toa_samp, N, peak_val, mean_val);
+
 
     } // for (int p_index = 0; p_index < N_ap; p_index++)
   } // for (int ant = 0; ant < frame_parms->nb_antennas_rx; ant++)
