@@ -579,21 +579,21 @@ void nr_schedule_srs(int module_id, frame_t frame, int slot)
       const uint16_t offset = get_nr_srs_offset(srs_resource->resourceType.choice.periodic->periodicityAndOffset_p);
 
       // Check if UE will transmit the SRS in this frame
-      LOG_I(NR_MAC,
-      "[gNB][SRS-SCHED] now=%d.%d -> cand=%d.%d abs=%d period=%u offset=%u mod=%d rnti=0x%04x\n",
-      frame, slot,
-      sched_frame, sched_slot,
-      sched_frame*n_slots_frame + sched_slot,
-      period, offset,
-      (sched_frame*n_slots_frame + sched_slot - offset) % period,
-      UE->rnti);
+      // LOG_I(NR_MAC,
+      // "[gNB][SRS-SCHED] now=%d.%d -> cand=%d.%d abs=%d period=%u offset=%u mod=%d rnti=0x%04x\n",
+      // frame, slot,
+      // sched_frame, sched_slot,
+      // sched_frame*n_slots_frame + sched_slot,
+      // period, offset,
+      // (sched_frame*n_slots_frame + sched_slot - offset) % period,
+      // UE->rnti);
 
       if ((sched_frame * n_slots_frame + sched_slot - offset) % period != 0)
-        continue;
-      LOG_D(NR_MAC," %d.%d Scheduling SRS reception for %d.%d\n", frame, slot, sched_frame, sched_slot);
-      LOG_I(NR_MAC,
-      "[gNB][SRS-SCHED] HIT schedule RX at %d.%d for rnti=0x%04x (period=%u offset=%u)\n",
-      sched_frame, sched_slot, UE->rnti, period, offset);
+         continue;
+      // LOG_D(NR_MAC," %d.%d Scheduling SRS reception for %d.%d\n", frame, slot, sched_frame, sched_slot);
+      // LOG_I(NR_MAC,
+      // "[gNB][SRS-SCHED] HIT schedule RX at %d.%d for rnti=0x%04x (period=%u offset=%u)\n",
+      // sched_frame, sched_slot, UE->rnti, period, offset);
 
       nr_fill_nfapi_srs(nrmac, CC_id, UE, sched_frame, sched_slot, srs_resource_set, srs_resource);
       

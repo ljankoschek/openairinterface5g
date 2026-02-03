@@ -96,14 +96,14 @@ int nr_get_srs_signal(PHY_VARS_gNB *gNB,
 
   bool no_srs_signal = true;
 
-  LOG_I(NR_PHY,
-      "[gNB][SRS-RX] frame=%d slot=%d rnti=0x%04x l0=%u sym_off=%lu sc_off=%lu N_ap=%u N_sym=%u K_TC=%u M_sc=%u\n",
-      frame, slot, srs_pdu->rnti,
-      l0,
-      (unsigned long)symbol_offset,
-      (unsigned long)subcarrier_offset,
-      (unsigned)N_ap, (unsigned)N_symb_SRS,
-      (unsigned)K_TC, (unsigned)M_sc_b_SRS);
+  // LOG_I(NR_PHY,
+  //     "[gNB][SRS-RX] frame=%d slot=%d rnti=0x%04x l0=%u sym_off=%lu sc_off=%lu N_ap=%u N_sym=%u K_TC=%u M_sc=%u\n",
+  //     frame, slot, srs_pdu->rnti,
+  //     l0,
+  //     (unsigned long)symbol_offset,
+  //     (unsigned long)subcarrier_offset,
+  //     (unsigned)N_ap, (unsigned)N_symb_SRS,
+  //     (unsigned)K_TC, (unsigned)M_sc_b_SRS);
 
   for (int ant = 0; ant < frame_parms->nb_antennas_rx; ant++) {
     memset(srs_received_signal[ant], 0, frame_parms->ofdm_symbol_size * sizeof(c16_t));
@@ -169,11 +169,11 @@ int nr_get_srs_signal(PHY_VARS_gNB *gNB,
     } // for (int p_index = 0; p_index < N_ap; p_index++)
   } // for (int ant = 0; ant < frame_parms->nb_antennas_rx; ant++)
 
-  if (no_srs_signal) {
-    LOG_W(NR_PHY, "[gNB][SRS-RX] no_srs_signal=true (all extracted REs were zero)\n");
-  } else {
-    LOG_I(NR_PHY, "[gNB][SRS-RX] no_srs_signal=false (found non-zero REs)\n");
-  }
+  // if (no_srs_signal) {
+  //   LOG_W(NR_PHY, "[gNB][SRS-RX] no_srs_signal=true (all extracted REs were zero)\n");
+  // } else {
+  //   LOG_I(NR_PHY, "[gNB][SRS-RX] no_srs_signal=false (found non-zero REs)\n");
+  // }
 
 
   if (no_srs_signal) {

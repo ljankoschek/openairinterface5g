@@ -31,7 +31,7 @@
  */
 
 #define _GNU_SOURCE
-//#define SRS_DEBUG
+#define SRS_DEBUG
 
 #include "nr/nr_common.h"
 #include "assertions.h"
@@ -363,10 +363,10 @@ static bool ue_srs_procedures_nr(PHY_VARS_NR_UE *ue,
                                    AMP,
                                    proc->frame_tx,
                                    proc->nr_slot_tx);
-  LOG_I(NR_PHY,
-      "[UE][SRS-TX] generate_srs_nr() returned=%d frame=%d slot=%d l0(from end)=%u symbol_offset=%u\n",
-      generated, proc->frame_tx, proc->nr_slot_tx,
-      srs_config_pdu->time_start_position, symbol_offset);
+  // LOG_I(NR_PHY,
+  //     "[UE][SRS-TX] generate_srs_nr() returned=%d frame=%d slot=%d l0(from end)=%u symbol_offset=%u\n",
+  //     generated, proc->frame_tx, proc->nr_slot_tx,
+  //     srs_config_pdu->time_start_position, symbol_offset);
 
   int first_sym = ue->frame_parms.symbols_per_slot - 1 - srs_config_pdu->time_start_position;
   //int num_srs_symbols[] = {1,2,4,8,12};
@@ -382,9 +382,9 @@ static bool ue_srs_procedures_nr(PHY_VARS_NR_UE *ue,
         if (sym[k].r != 0 || sym[k].i != 0) nonzero++;
       }
     }
-    LOG_I(NR_PHY,
-          "[UE][SRS-TX] ant=%d nonzero=%d / total=%d over %d symbols (first_sym=%d)\n",
-          ant, nonzero, total, nsym, first_sym);
+  //   LOG_I(NR_PHY,
+  //         "[UE][SRS-TX] ant=%d nonzero=%d / total=%d over %d symbols (first_sym=%d)\n",
+  //         ant, nonzero, total, nsym, first_sym);
   }
 
                     

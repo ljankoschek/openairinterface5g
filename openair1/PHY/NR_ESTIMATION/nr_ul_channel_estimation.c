@@ -34,6 +34,9 @@
 #include "executables/softmodem-common.h"
 #include "nr_phy_common.h"
 #include "openair1/PHY/TOOLS/phy_scope_interface.h"
+#include <PHY/TOOLS/tools_defs.h>
+
+#define NR_SRS_IDFT_OVERSAMP_FACTOR 16  
 
 //#define DEBUG_CH
 //#define DEBUG_PUSCH
@@ -89,30 +92,24 @@ __attribute__((always_inline)) inline c16_t c32x16cumulVectVectWithSteps(c16_t *
   return c16x32div(cumul, N);
 }
 
-
-// peak estimation
-static inline int32_t squaredMod_c16(c16_t x)
+/* Generic function to find the peak of channel estimation buffer */
+void peak_estimator_ul(c16_t *buffer, int32_t buf_len, int32_t *peak_idx, int32_t *peak_val, int32_t mean_val)
 {
-  return (int32_t)x.r * x.r + (int32_t)x.i * x.i;
-}
-
-static void peak_estimator_ul(c16_t *buffer,
-                              int32_t buf_len,
-                              int32_t *peak_idx,
-                              int32_t *peak_val,
-                              int32_t mean_val)
-{
-  int32_t max_val = 0, max_idx = 0;
-
-  for (int k = 0; k < buf_len; k++) {
-    int32_t v = squaredMod_c16(buffer[k]);
-    if (v > max_val) {
-      max_val = v;
+  int32_t max_val = 0, max_idx = 0, abs_val = 0;
+  for(int k = 0; k < buf_len; k++)
+  {
+    abs_val = squaredMod(buffer[k]);
+    if(abs_val > max_val)
+    {
+      max_val = abs_val;
       max_idx = k;
     }
   }
 
-  if (mean_val != 0 && (max_val / mean_val > 10)) {
+
+  // Check for detection threshold
+  LOG_I(PHY, "PRS ToA estimator: max_val %d, mean_val %d, max_idx %d\n", max_val, mean_val, max_idx);
+  if ((mean_val != 0) && (max_val / mean_val > 10)) {
     *peak_val = max_val;
     *peak_idx = max_idx;
   } else {
@@ -120,7 +117,6 @@ static void peak_estimator_ul(c16_t *buffer,
     *peak_idx = 0;
   }
 }
-
 
 
 
@@ -1002,6 +998,29 @@ int nr_srs_channel_estimation(
                 (int16_t *)srs_estimated_channel_freq[ant][p_index],
                 (int16_t *)srs_estimated_channel_time[ant][p_index]);
 
+      const int N = gNB->frame_parms.ofdm_symbol_size;
+
+      // mean_val: use average power over the whole CIR (more stable than picking one tap)
+      uint64_t sum = 0;
+      for (int k = 0; k < N; k++) {
+        sum += (uint32_t)squaredMod(srs_estimated_channel_time[ant][p_index][k]);
+      }
+      int32_t mean_val = (int32_t)(sum / (uint32_t)N);
+
+      int32_t max_idx = 0;
+      int32_t max_val = 0;
+
+      // identical logic as DL PRS: returns (0,0) if below threshold
+      peak_estimator_ul(srs_estimated_channel_time[ant][p_index], N, &max_idx, &max_val, mean_val);
+
+      // Convert index -> signed delay in samples (same unwrap logic as DL)
+      float ul_toa = (float) max_idx;
+      if ((N - ul_toa) < N / 2)
+      ul_toa -= N;
+      LOG_I(PHY,
+            "[gNB %d][rnti 0x%04x][Rx %d][port %d][sfn %d][slot %d] UL SRS ToA ==> %.1f / %d samples (max_val %d, mean_val %d, max_idx %d)\n",
+            0, srs_pdu->rnti, ant, p_index, frame, slot, ul_toa, N, max_val, mean_val, max_idx);
+
       memcpy(srs_estimated_channel_time_shifted[ant][p_index],
              &srs_estimated_channel_time[ant][p_index][gNB->frame_parms.ofdm_symbol_size >> 1],
              (gNB->frame_parms.ofdm_symbol_size >> 1) * sizeof(c16_t));
@@ -1009,32 +1028,6 @@ int nr_srs_channel_estimation(
       memcpy(&srs_estimated_channel_time_shifted[ant][p_index][gNB->frame_parms.ofdm_symbol_size >> 1],
              srs_estimated_channel_time[ant][p_index],
              (gNB->frame_parms.ofdm_symbol_size >> 1) * sizeof(c16_t));
-
-      // --- UL ToA from SRS CIR (time domain) ---
-      const int N = gNB->frame_parms.ofdm_symbol_size;
-
-      // Use the shifted CIR buffer (FFT-shifted, so "0 delay" is at N/2)
-      c16_t *cir = srs_estimated_channel_time_shifted[ant][p_index];
-
-      // Mean power for thresholding
-      uint64_t sum = 0;
-      for (int k = 0; k < N; k++)
-        sum += (uint32_t)squaredMod_c16(cir[k]);
-
-      int32_t mean_val = (int32_t)(sum / (uint32_t)N);
-
-      int32_t peak_idx = 0, peak_val = 0;
-      peak_estimator_ul(cir, N, &peak_idx, &peak_val, mean_val);
-
-      // Convert peak index to signed sample delay around 0
-      // (because cir is shifted by N/2)
-      int32_t toa_samp = peak_idx - (N >> 1);
-
-      // Log it
-      LOG_I(NR_PHY,
-            "[gNB %d][SRS][rnti 0x%04x][frame %d][slot %d][Rx %d][port %d] UL ToA ==> %d / %d samples (peak=%d mean=%d)\n",
-            0, srs_pdu->rnti, frame, slot, ant, p_index, toa_samp, N, peak_val, mean_val);
-
 
     } // for (int p_index = 0; p_index < N_ap; p_index++)
   } // for (int ant = 0; ant < frame_parms->nb_antennas_rx; ant++)

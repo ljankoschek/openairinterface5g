@@ -44,8 +44,8 @@
 #endif
 
 /* to set for UE capabilities */
-#define MAX_NR_OF_SRS_RESOURCE_SET         (10)
-#define MAX_NR_OF_SRS_RESOURCES_PER_SET    (10)
+#define MAX_NR_OF_SRS_RESOURCE_SET         (1)
+#define MAX_NR_OF_SRS_RESOURCES_PER_SET    (1)
 
 #define NR_NUMBER_OF_SUBFRAMES_PER_FRAME   (10)
 #define MAX_NROFSRS_PORTS                  (4)
