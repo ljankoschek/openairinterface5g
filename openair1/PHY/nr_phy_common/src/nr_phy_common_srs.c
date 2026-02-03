@@ -296,6 +296,15 @@ bool generate_srs_nr(const NR_DL_FRAME_PARMS *frame_parms,
       uint8_t k_0_overbar_p = nr_srs_info->n_shift * NR_NB_SC_PER_RB + (K_TC_p + k_l_offset) % K_TC;
       uint8_t k_0_p = k_0_overbar_p + K_TC * M_sc_b_SRS * sum_n_b;
       nr_srs_info->k_0_p[p_index][l_line] = k_0_p;
+      LOG_I(NR_PHY,
+      "[SRS-K0] frame=%d slot=%d port=%d l_line=%d k0_p=%u K_TC=%u M_sc_b_SRS=%u subcarrier_offset=%lu\n",
+      frame_number, slot_number,
+      p_index, l_line,
+      (unsigned)k_0_p,
+      (unsigned)K_TC,
+      (unsigned)M_sc_b_SRS,
+      (unsigned long)subcarrier_offset);
+
 
 #ifdef SRS_DEBUG
       LOG_I(NR_PHY,"K_TC_p = %i\n", K_TC_p);

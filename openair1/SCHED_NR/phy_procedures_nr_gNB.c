@@ -719,6 +719,14 @@ static void fill_ul_rb_mask(PHY_VARS_gNB *gNB,
     if (!(srs && srs->active && srs->frame == frame_rx && srs->slot == slot_rx))
       continue;
     nfapi_nr_srs_pdu_t *srs_pdu = &srs->srs_pdu;
+    LOG_I(NR_PHY,
+      "[gNB][SRS-PROC] frame=%d slot=%d found active SRS rnti=0x%04x bwp_start=%u bwp_size=%u l0=%u num_sym=%u comb=%u\n",
+      frame_rx, slot_rx,
+      srs_pdu->rnti,
+      srs_pdu->bwp_start, srs_pdu->bwp_size,
+      srs_pdu->time_start_position, srs_pdu->num_symbols,
+      srs_pdu->comb_size);
+
     for (int symbol = 0; symbol < (1 << srs_pdu->num_symbols); symbol++) {
       for (int rb = srs_pdu->bwp_start; rb < (srs_pdu->bwp_start + srs_pdu->bwp_size); rb++) {
         rb_mask_ul[srs_pdu->time_start_position + symbol][rb >> 5] |= 1U << (rb & 31);
@@ -1154,6 +1162,15 @@ int phy_procedures_gNB_uespec_RX(PHY_VARS_gNB *gNB, int frame_rx, int slot_rx, N
     srs_indication->timing_advance_offset_nsec =
         srs_est >= 0 ? (int16_t)((((int32_t)srs_indication->timing_advance_offset - 31) * ((int32_t)TC_NSEC_x32768)) >> 15)
                      : 0xFFFF;
+    LOG_I(NR_PHY,
+      "[gNB][SRS-IND] frame=%d slot=%d rnti=0x%04x srs_est=%d snr=%d (x0.1dB if scaled) ta_off=%d ta_ns=%d\n",
+      frame_rx, slot_rx,
+      srs_pdu->rnti,
+      srs_est,
+      gNB->srs->snr,
+      srs_indication->timing_advance_offset,
+      srs_indication->timing_advance_offset_nsec);
+
     switch (srs_pdu->srs_parameters_v4.usage) {
       case 0:
         LOG_W(NR_PHY, "SRS report was not requested by MAC\n");

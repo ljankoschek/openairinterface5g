@@ -1411,10 +1411,14 @@ extern "C" {
       s->usrp->set_clock_source("gpsdo");
       LOG_I(HW, "Setting clock source to gpsdo\n");
     } else {
+      openair0_cfg[0].clock_source = gpsdo;
+      s->usrp->set_clock_source("gpsdo");
       LOG_W(HW, "Clock source set neither in usrp_args nor on command line, using default!\n");
     }
   } else {
     if (openair0_cfg[0].clock_source != unset) {
+      openair0_cfg[0].clock_source = gpsdo;
+      s->usrp->set_clock_source("gpsdo");
       LOG_W(HW, "Clock source set in both usrp_args and in clock_source, ingnoring the latter!\n");
     }
   }
@@ -1430,10 +1434,14 @@ extern "C" {
       s->usrp->set_time_source("gpsdo");
       LOG_I(HW, "Setting time source to gpsdo\n");
     } else {
+      s->usrp->set_time_source("gpsdo");
+      openair0_cfg[0].time_source = gpsdo;
       LOG_W(HW, "Time source set neither in usrp_args nor on command line, using default!\n");
     }
   } else {
     if (openair0_cfg[0].time_source != unset) {
+      openair0_cfg[0].time_source = gpsdo;
+      s->usrp->set_time_source("gpsdo");
       LOG_W(HW, "Time source set in both usrp_args and in openair0_cfg[0].time_source, ignoring the latter!\n");
     }
   }

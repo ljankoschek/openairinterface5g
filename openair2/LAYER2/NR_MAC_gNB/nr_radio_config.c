@@ -828,7 +828,7 @@ static NR_SRS_Resource_t *get_srs_resource(const NR_ServingCellConfigCommon_t *s
       AssertFatal(1 == 0, "Invalid transmission comb %d\n", tx_comb);
   }
   srs_res->resourceMapping.startPosition = 1;
-  srs_res->resourceMapping.nrofSymbols = NR_SRS_Resource__resourceMapping__nrofSymbols_n1;
+  srs_res->resourceMapping.nrofSymbols = NR_SRS_Resource__resourceMapping__nrofSymbols_n2;
   srs_res->resourceMapping.repetitionFactor = NR_SRS_Resource__resourceMapping__repetitionFactor_n1;
   srs_res->freqDomainPosition = 0;
   srs_res->freqDomainShift = 0;
