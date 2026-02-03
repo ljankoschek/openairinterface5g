@@ -983,7 +983,7 @@ int configure_srs_pdu(NR_UE_MAC_INST_t *mac,
       get_srs_tx_power_ue(mac, srs_resource, srs_resource_set, delta_srs, is_configured_for_pusch_on_current_bwp);
 
 #ifdef SRS_DEBUG
-  LOG_I(NR_MAC,"Frame = %i, slot = %i\n", frame, slot);
+  //LOG_I(NR_MAC,"Frame = %i, slot = %i\n", frame, slot);
   LOG_I(NR_MAC,"srs_config_pdu->rnti = 0x%04x\n", srs_config_pdu->rnti);
   LOG_I(NR_MAC,"srs_config_pdu->handle = %u\n", srs_config_pdu->handle);
   LOG_I(NR_MAC,"srs_config_pdu->bwp_size = %u\n", srs_config_pdu->bwp_size);
@@ -1118,6 +1118,12 @@ static bool nr_ue_periodic_srs_scheduling(NR_UE_MAC_INST_t *mac, frame_t frame, 
 
     // Check if UE should transmit the SRS
     if((frame*n_slots_frame+slot-offset)%period == 0) {
+      LOG_I(NR_MAC,
+      "[UE][SRS-SCHED] HIT frame=%d slot=%d abs=%d period=%u offset=%u (expr=%d) -> create UL SRS PDU\n",
+      frame, slot,
+      frame*n_slots_frame + slot,
+      period, offset,
+      (frame*n_slots_frame+slot-offset)%period);
       fapi_nr_ul_config_request_pdu_t *pdu = lockGet_ul_config(mac, frame, slot, FAPI_NR_UL_CONFIG_TYPE_SRS);
       if (!pdu)
         return false;
@@ -1127,6 +1133,7 @@ static bool nr_ue_periodic_srs_scheduling(NR_UE_MAC_INST_t *mac, frame_t frame, 
       else
         srs_scheduled = true;
       release_ul_config(pdu, false);
+
     }
   }
   return srs_scheduled;

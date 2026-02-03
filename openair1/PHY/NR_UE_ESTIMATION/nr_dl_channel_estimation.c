@@ -63,7 +63,7 @@ void peak_estimator(c16_t *buffer, int32_t buf_len, int32_t *peak_idx, int32_t *
 
 
   // Check for detection threshold
-  LOG_D(PHY, "PRS ToA estimator: max_val %d, mean_val %d, max_idx %d\n", max_val, mean_val, max_idx);
+  LOG_I(PHY, "PRS ToA estimator: max_val %d, mean_val %d, max_idx %d\n", max_val, mean_val, max_idx);
   if ((mean_val != 0) && (max_val / mean_val > 10)) {
     *peak_val = max_val;
     *peak_idx = max_idx;
@@ -484,37 +484,37 @@ int nr_prs_channel_estimation(uint8_t gNB_id,
     // float peak_samp_frac = peak_os_frac / (float)NR_PRS_IDFT_OVERSAMP_FACTOR;
 
     // LOG_I(PHY,
-          // "[PRS-RAW] gNB %d rsc %d Rx %d sfn %d slot %d: peak_os=%.3f peak_samp=%.3f (len_os=%d)\n",
-          // gNB_id, rsc_id, rxAnt, proc->frame_rx, proc->nr_slot_rx,
-          // peak_os_frac, peak_samp_frac, len);
+    //       "[PRS-RAW] gNB %d rsc %d Rx %d sfn %d slot %d: peak_os=%.3f peak_samp=%.3f (len_os=%d)\n",
+    //       gNB_id, rsc_id, rxAnt, proc->frame_rx, proc->nr_slot_rx,
+    //       peak_os_frac, peak_samp_frac, len);
 
     // --- Option 1: unwrap correlation index + make it absolute over time ---
 
     // const int len_os = NR_PRS_IDFT_OVERSAMP_FACTOR * frame_params->ofdm_symbol_size; // correlation length in oversampled samples
 
-    // 1) raw peak index in correlation domain (0..len_os-1)
+    // // 1) raw peak index in correlation domain (0..len_os-1)
     // int prs_toa_raw_os = prs_toa;
 
-    // 2) unwrap to signed domain around 0 (so delays near end become negative)
+    // // 2) unwrap to signed domain around 0 (so delays near end become negative)
     // int prs_toa_signed_os = prs_toa_raw_os;
     // if (prs_toa_signed_os > len_os/2)
     //   prs_toa_signed_os -= len_os;
 
-    // 3) include fractional refinement (optional but recommended since you already compute frac)
+    // // 3) include fractional refinement (optional but recommended since you already compute frac)
     // float prs_toa_raw_os_f = (float)prs_toa_raw_os + frac;
     // float prs_toa_signed_os_f = prs_toa_raw_os_f;
     // if (prs_toa_raw_os_f > (float)len_os/2.0f)
     //   prs_toa_signed_os_f -= (float)len_os;
 
-    // 4) build a monotonic "absolute" index by adding a slot counter
+    // // 4) build a monotonic "absolute" index by adding a slot counter
     // int64_t abs_slot = (int64_t)proc->frame_rx * (int64_t)frame_params->slots_per_frame
     //                 + (int64_t)proc->nr_slot_rx;
 
-    // absolute peak position in oversampled correlation samples
-    //double abs_toa_os = (double)abs_slot * (double)len_os + (double)prs_toa_signed_os_f;
+    // // absolute peak position in oversampled correlation samples
+    // double abs_toa_os = (double)abs_slot * (double)len_os + (double)prs_toa_signed_os_f;
 
-    // also in non-oversampled samples (divide by oversamp)
-    //double abs_toa_samp = abs_toa_os / (double)NR_PRS_IDFT_OVERSAMP_FACTOR;
+    // // also in non-oversampled samples (divide by oversamp)
+    // double abs_toa_samp = abs_toa_os / (double)NR_PRS_IDFT_OVERSAMP_FACTOR;
 
     // LOG_I(PHY,
     //       "[PRS-ABS] gNB %d rsc %d Rx %d sfn %d slot %d abs_slot=%lld "

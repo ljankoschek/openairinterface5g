@@ -36,7 +36,7 @@
 #include <math.h>
 #include "PHY/sse_intrin.h"
 
-// #define SRS_DEBUG
+//#define SRS_DEBUG
 const uint16_t m_SRS[64] = { 4, 8, 12, 16, 16, 20, 24, 24, 28, 32, 36, 40, 48, 48, 52, 56, 60, 64, 72, 72, 76, 80, 88,
                              96, 96, 104, 112, 120, 120, 120, 128, 128, 128, 132, 136, 144, 144, 144, 144, 152, 160,
                              160, 160, 168, 176, 184, 192, 192, 192, 192, 208, 216, 224, 240, 240, 240, 240, 256, 256,
@@ -579,10 +579,24 @@ void nr_schedule_srs(int module_id, frame_t frame, int slot)
       const uint16_t offset = get_nr_srs_offset(srs_resource->resourceType.choice.periodic->periodicityAndOffset_p);
 
       // Check if UE will transmit the SRS in this frame
+      LOG_I(NR_MAC,
+      "[gNB][SRS-SCHED] now=%d.%d -> cand=%d.%d abs=%d period=%u offset=%u mod=%d rnti=0x%04x\n",
+      frame, slot,
+      sched_frame, sched_slot,
+      sched_frame*n_slots_frame + sched_slot,
+      period, offset,
+      (sched_frame*n_slots_frame + sched_slot - offset) % period,
+      UE->rnti);
+
       if ((sched_frame * n_slots_frame + sched_slot - offset) % period != 0)
         continue;
       LOG_D(NR_MAC," %d.%d Scheduling SRS reception for %d.%d\n", frame, slot, sched_frame, sched_slot);
+      LOG_I(NR_MAC,
+      "[gNB][SRS-SCHED] HIT schedule RX at %d.%d for rnti=0x%04x (period=%u offset=%u)\n",
+      sched_frame, sched_slot, UE->rnti, period, offset);
+
       nr_fill_nfapi_srs(nrmac, CC_id, UE, sched_frame, sched_slot, srs_resource_set, srs_resource);
+      
     }
   }
 }
